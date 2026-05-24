@@ -89,7 +89,7 @@ export default function LandingPage({ onEnterApp }) {
         <div className={s.navInner}>
           <div className={s.brand}>
             <div className={s.brandIcon}><Mail size={13} strokeWidth={2.2} /></div>
-            <span className={s.brandName}>MailProbe</span>
+            <span className={s.brandName}>MailT</span>
           </div>
           <div className={s.navRight}>
             <a href="#features" className={s.navLink}>Features</a>

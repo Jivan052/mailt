@@ -491,7 +491,7 @@ export default function AppPage({ onBack }) {
         <div className={s.sideTop}>
           <div className={s.brand}>
             <div className={s.brandIcon}><Mail size={13} strokeWidth={2.2}/></div>
-            <span className={s.brandName}>MailProbe</span>
+            <span className={s.brandName}>MailT</span>
           </div>
         </div>
 
