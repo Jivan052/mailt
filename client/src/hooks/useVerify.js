@@ -1,17 +1,17 @@
 // hooks/useVerify.js
-// Shared streaming email verification logic used by both LandingPage and AppPage
 import { useState, useCallback, useRef } from 'react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 export function useVerify() {
-  const [results, setResults]       = useState([])
-  const [total, setTotal]           = useState(0)
-  const [done, setDone]             = useState(0)
-  const [status, setStatus]         = useState('idle') // idle | running | complete | error
-  const [errorMsg, setErrorMsg]     = useState('')
-  const abortRef                    = useRef(null)
+  const [results, setResults]   = useState([])
+  const [total, setTotal]       = useState(0)
+  const [done, setDone]         = useState(0)
+  const [status, setStatus]     = useState('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+  const abortRef                = useRef(null)
 
   const verify = useCallback(async ({ emails = [], file = null }) => {
-    // Cancel any in-flight request
     if (abortRef.current) abortRef.current.abort()
     const ctrl = new AbortController()
     abortRef.current = ctrl
@@ -27,9 +27,9 @@ export function useVerify() {
       if (file) {
         const fd = new FormData()
         fd.append('csvfile', file)
-        res = await fetch('/verify', { method: 'POST', body: fd, signal: ctrl.signal })
+        res = await fetch(`${API_URL}/verify`, { method: 'POST', body: fd, signal: ctrl.signal })
       } else {
-        res = await fetch('/verify', {
+        res = await fetch(`${API_URL}/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ emails }),

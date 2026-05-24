@@ -5,7 +5,7 @@
  */
 
 const express = require("express");
-const path = require("path");
+const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 
 const verifyRoute = require("./routes/verifyRoute");
@@ -13,16 +13,26 @@ const verifyRoute = require("./routes/verifyRoute");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ── CORS ──────────────────────────────────────────────────────────────────────
+
+const allowedOrigins = process.env.NODE_ENV === "production"
+  ? [process.env.FRONTEND_URL]
+  : ["http://localhost:5173", "http://localhost:3000"];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
+
 // ── Middleware ────────────────────────────────────────────────────────────────
 
 // Parse JSON request bodies
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "5mb" }));
 
-// Serve static files from /public
-app.use(express.static(path.join(__dirname, "public")));
+// ── Rate limiting ─────────────────────────────────────────────────────────────
 
 // Global rate limiter — max 20 requests per IP per 15 minutes
-// Prevents abuse of the /verify endpoint
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -39,10 +49,8 @@ app.use("/verify", globalLimiter);
 
 app.use("/verify", verifyRoute);
 
-// Catch-all: serve index.html for any unmatched GET (SPA fallback)
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+// Health check — confirms the server is running
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 // ── Global error handler ──────────────────────────────────────────────────────
 
