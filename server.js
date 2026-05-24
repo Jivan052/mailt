@@ -12,6 +12,8 @@ const verifyRoute = require("./routes/verifyRoute");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+// Trust proxy
+app.set('trust proxy', 1)
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 
