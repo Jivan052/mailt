@@ -490,8 +490,7 @@ export default function AppPage({ onBack }) {
       <aside className={s.sidebar}>
         <div className={s.sideTop}>
           <div className={s.brand}>
-            <div className={s.brandIcon}><Mail size={13} strokeWidth={2.2}/></div>
-            <span className={s.brandName}>MailT</span>
+          <img src="/logo.png" alt="MailT" className={s.brandLogo} />
           </div>
         </div>
 

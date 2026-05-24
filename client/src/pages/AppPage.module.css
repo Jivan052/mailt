@@ -49,6 +49,13 @@
   background:var(--ink);
 }
 
+.brandLogo {
+  height: 28px;
+  width: auto;
+  mix-blend-mode: multiply;
+  display: block;
+}
+
 .navCount {
   margin-left:auto;
   min-width:17px; height:17px; border-radius:99px;

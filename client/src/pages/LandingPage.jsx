@@ -4,6 +4,9 @@ import { useVerify } from '../hooks/useVerify.js'
 import StatusBadge   from '../components/StatusBadge.jsx'
 import s             from './LandingPage.module.css'
 
+import mailImg  from '/mail.png'
+import planeImg from '/plane.png'
+
 const FREE_LIMIT = 3
 const CHECKS_KEY = 'mailprobe_checks'
 
@@ -55,7 +58,6 @@ export default function LandingPage({ onEnterApp }) {
   const remaining = Math.max(0, FREE_LIMIT - checksUsed)
   const isLocked  = checksUsed >= FREE_LIMIT
 
-  // Scroll to results when first result arrives
   useEffect(() => {
     if (results.length === 1 && resultsRef.current) {
       setTimeout(() => resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150)
@@ -87,16 +89,15 @@ export default function LandingPage({ onEnterApp }) {
       {/* ── Nav ── */}
       <nav className={s.nav}>
         <div className={s.navInner}>
-          <div className={s.brand}>
-            <div className={s.brandIcon}><Mail size={13} strokeWidth={2.2} /></div>
-            <span className={s.brandName}>MailT</span>
-          </div>
+        <div className={s.brand}>
+        <img src="/logo.png" alt="MailT" className={s.brandLogo} />
+        </div>
           <div className={s.navRight}>
             <a href="#features" className={s.navLink}>Features</a>
             <a href="#usecases" className={s.navLink}>Use cases</a>
             <div className={s.navDivider} />
             <button className={s.navCta} onClick={onEnterApp}>
-              Verify in bulk <ArrowRight size={12} />
+              Verify at scale<ArrowRight size={12} />
             </button>
           </div>
         </div>
@@ -104,27 +105,48 @@ export default function LandingPage({ onEnterApp }) {
 
       {/* ── Hero ── */}
       <section className={s.hero}>
+
+        {/* Mail image — left side */}
+        <img src={mailImg}  className={s.heroImgMail}  alt="" aria-hidden />
+        {/* Plane image — right side */}
+        <img src={planeImg} className={s.heroImgPlane} alt="" aria-hidden />
+
         <div className={s.heroInner}>
 
           <div className={s.heroBadge}>
             <span className={s.badgeDot} />
-            Free to try
+            Instant email verification
           </div>
 
           <h1 className={s.heroTitle}>
-            Know if your emails<br /><em>actually land.</em>
+            Know if your emails<br /><em>actually deliver.</em>
           </h1>
-
           <p className={s.heroSub}>
-            Validate format, DNS/MX records and SMTP deliverability before you send.
+            Instantly verify email validity, <strong>SMTP connectivity</strong>,
+            mail server health, and <strong>deliverability.</strong>
           </p>
+
+          {/* ── Feature pills row ── */}
+          <div className={s.featurePills}>
+            {[
+              { icon: <Mail size={16}/>,       label: 'Email validity'      },
+              { icon: <Zap size={16}/>,        label: 'SMTP connectivity'   },
+              { icon: <Globe size={16}/>,      label: 'DNS / MX records'    },
+              { icon: <CheckCircle size={16}/>,label: 'Deliverability'      },
+            ].map(({ icon, label }) => (
+              <div key={label} className={s.featurePill}>
+                <span className={s.pillIcon}>{icon}</span>
+                <span className={s.pillLabel}>{label}</span>
+              </div>
+            ))}
+          </div>
 
           {/* ── Checker card ── */}
           <div className={s.checker}>
             <div className={s.checkerHead}>
               <div className={s.checkerLive}>
                 <span className={s.liveDot} />
-                <span>Live checker</span>
+                <span>Live validation</span>
               </div>
               <span className={`${s.checkerRemaining} ${isLocked ? s.checkerRemainingLocked : ''}`}>
                 {isLocked ? 'Free limit reached' : `${remaining} free check${remaining !== 1 ? 's' : ''} left`}
@@ -199,7 +221,7 @@ export default function LandingPage({ onEnterApp }) {
             </div>
           )}
 
-          {/* ── Locked CTA — shown once limit is hit ── */}
+          {/* ── Locked CTA ── */}
           {isLocked && (
             <div className={s.lockedCta}>
               <div className={s.lockedLeft}>
@@ -210,17 +232,16 @@ export default function LandingPage({ onEnterApp }) {
                 </div>
               </div>
               <button className={s.bulkBtn} onClick={onEnterApp}>
-                Verify in bulk <ArrowRight size={13} />
+                Verify at scale <ArrowRight size={13} />
               </button>
             </div>
           )}
 
-          {/* ── Subtle bulk CTA — shown while still under limit ── */}
           {!isLocked && (
             <div className={s.bulkCta}>
-              <span className={s.bulkCtaText}>Need to verify hundreds at once?</span>
+              <span className={s.bulkCtaText}>Need to verify many emails at once?</span>
               <button className={s.bulkCtaBtn} onClick={onEnterApp}>
-                Verify in bulk <ArrowRight size={12} />
+                Verify at scale <ArrowRight size={12} />
               </button>
             </div>
           )}
@@ -273,8 +294,6 @@ export default function LandingPage({ onEnterApp }) {
               </div>
             ))}
           </div>
-
-          {/* Bottom CTA */}
         </div>
       </section>
 

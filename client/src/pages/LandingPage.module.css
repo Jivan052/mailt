@@ -71,9 +71,52 @@
 .navCta:active { transform: scale(.98); }
 
 /* ── Hero ── */
-.hero { position: relative; z-index: 2; padding: 64px 28px 56px; }
-.heroInner { max-width: 620px; margin: 0 auto; text-align: center; }
+.hero {
+  position: relative;
+  z-index: 2;
+  padding: 64px 28px 56px;
+  overflow: hidden;
+}
+.heroInner {
+  max-width: 620px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
 
+/* ── Hero images ── */
+.heroImgMail {
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-54%);
+  width: clamp(200px, 22vw, 320px);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.92;
+  z-index: 1;
+}
+
+.brandLogo {
+  height: 28px;
+  width: auto;
+  mix-blend-mode: multiply;
+  display: block;
+}
+
+.heroImgPlane {
+  position: absolute;
+  right: -10px;
+  top: 8%;
+  width: clamp(120px, 14vw, 200px);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.88;
+  z-index: 1;
+}
+
+/* ── Hero badge ── */
 .heroBadge {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 4px 12px; border-radius: 99px;
@@ -100,9 +143,41 @@
 
 .heroSub {
   font-size: 15px; color: var(--ink-4); line-height: 1.6;
-  max-width: 440px; margin: 0 auto 32px;
+  max-width: 440px; margin: 0 auto 28px;
   animation: fadeUp .45s var(--ease) .1s both;
 }
+.heroSub strong { color: var(--ink-2); font-weight: 500; }
+
+/* ── Feature pills row ── */
+.featurePills {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+  animation: fadeUp .45s var(--ease) .13s both;
+}
+.featurePill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  box-shadow: 0 1px 3px rgba(20,19,16,.04);
+  transition: box-shadow .15s, border-color .15s, transform .15s;
+}
+.featurePill:hover {
+  border-color: var(--border-2);
+  box-shadow: 0 2px 8px rgba(20,19,16,.07);
+  transform: translateY(-1px);
+}
+.pillIcon { display: flex; align-items: center; color: var(--ink-3); }
+.pillLabel { font-weight: 500; }
 
 /* ── Checker card ── */
 .checker {
@@ -270,7 +345,7 @@ kbd {
 .bulkBtn:hover { opacity: .87; }
 .bulkBtn:active { transform: scale(.98); }
 
-/* ── Subtle bulk CTA below checker ── */
+/* ── Subtle bulk CTA ── */
 .bulkCta {
   display: flex; align-items: center; justify-content: center; gap: 12px;
   margin-top: 16px; flex-wrap: wrap;
@@ -342,22 +417,6 @@ kbd {
 .usecaseList li { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-2); }
 .ptCheck { color: var(--green); flex-shrink: 0; }
 
-/* ── Section CTA ── */
-.sectionCta {
-  display: flex; align-items: center; gap: 16px;
-  margin-top: 44px; flex-wrap: wrap;
-}
-.sectionCtaBtn {
-  display: flex; align-items: center; gap: 7px;
-  padding: 10px 22px; border-radius: var(--radius);
-  border: none; background: var(--ink); color: var(--surface);
-  font-family: var(--font-sans); font-size: 14px; font-weight: 500;
-  cursor: pointer; transition: opacity .12s, transform .1s;
-}
-.sectionCtaBtn:hover { opacity: .87; }
-.sectionCtaBtn:active { transform: scale(.98); }
-.sectionCtaNote { font-size: 12.5px; color: var(--ink-4); }
-
 /* ── Footer note ── */
 .footNote {
   position: relative; z-index: 2; text-align: center;
@@ -373,7 +432,13 @@ kbd {
 }
 
 /* ── Responsive ── */
+@media (max-width: 900px) {
+  .heroImgMail  { width: 180px; left: -10px; }
+  .heroImgPlane { width: 120px; right: -5px; }
+}
 @media (max-width: 640px) {
+  .heroImgMail  { display: none; }
+  .heroImgPlane { display: none; }
   .navRight .navLink { display: none; }
   .navDivider { display: none; }
   .hero { padding: 48px 20px 40px; }
@@ -382,5 +447,6 @@ kbd {
   .features, .usecases { padding: 52px 0; }
   .lockedCta { flex-direction: column; align-items: flex-start; }
   .bulkBtn { width: 100%; justify-content: center; }
-  .sectionCta { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .featurePills { gap: 7px; }
+  .featurePill { font-size: 11.5px; padding: 6px 10px; }
 }
