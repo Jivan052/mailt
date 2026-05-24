@@ -4,11 +4,6 @@
  * Raw TCP SMTP probe for RCPT TO verification.
  * Uses Node's built-in 'net' module — no external library needed.
  *
- * Why raw sockets:
- *   smtp-connection v4 wraps nodemailer and requires a full message stream
- *   for send(). For a deliverability probe we only need EHLO/MAIL FROM/RCPT TO
- *   — raw sockets are cleaner, lighter, and easier to control.
- *
  * Strategy:
  *   1. Try port 25 on each MX host (standard mail exchange)
  *   2. Fall back to port 587 if port 25 is blocked/refused
@@ -17,7 +12,7 @@
  *   5. If RCPT TO is accepted (2xx/3xx) → probe with fake address for catch-all
  *
  * Timeouts:
- *   CONNECT_TIMEOUT: TCP SYN → SYN-ACK (8s)
+ *   CONNECT_TIMEOUT:  TCP SYN → SYN-ACK (8s)
  *   RESPONSE_TIMEOUT: wait for each SMTP response (8s)
  */
 
@@ -62,14 +57,16 @@ function smtpConversation({ host, port, commands }) {
 
     function resetResponseTimer() {
       clearTimeout(responseTimer);
+      // FIX 1: Response timeout → treat as blocked
+      // On cloud hosts (Render, Railway etc) ports are silently dropped,
+      // so a response timeout means the network is blocking us, not a real SMTP rejection
       responseTimer = setTimeout(() => {
-        done({ responses, blocked: false, error: "Response timeout" });
+        done({ responses, blocked: true, error: "Response timeout" });
       }, RESPONSE_TIMEOUT);
     }
 
     function sendNext() {
       if (commandIndex >= commands.length) {
-        // All commands sent — done successfully
         clearTimeout(responseTimer);
         done({ responses, blocked: false, error: null });
         return;
@@ -80,10 +77,8 @@ function smtpConversation({ host, port, commands }) {
     }
 
     function processLine(line) {
-      // SMTP responses: "CODE text" or "CODE-text" (multi-line continuation)
-      // Only process complete responses (no dash after code = final line)
       const match = line.match(/^(\d{3})([ \-])(.*)/);
-      if (!match) return; // partial line — wait for more
+      if (!match) return;
 
       const [, code, separator] = match;
 
@@ -94,7 +89,7 @@ function smtpConversation({ host, port, commands }) {
       sendNext();
     }
 
-    // Connect
+    // Connect timeout — always blocked
     connectTimer = setTimeout(() => {
       done({ responses, blocked: true, error: "Connection timeout" });
     }, CONNECT_TIMEOUT);
@@ -115,7 +110,7 @@ function smtpConversation({ host, port, commands }) {
     socket.on("data", (data) => {
       responseBuffer += data;
       const lines = responseBuffer.split("\r\n");
-      responseBuffer = lines.pop(); // keep incomplete last line
+      responseBuffer = lines.pop();
 
       for (const line of lines) {
         if (line.trim()) processLine(line.trim());
@@ -124,30 +119,26 @@ function smtpConversation({ host, port, commands }) {
 
     socket.on("error", (err) => {
       const msg = err.message || "";
+      // FIX 2: Treat ALL socket errors as blocked on cloud environments
+      // ECONNREFUSED, ETIMEDOUT, ECONNRESET, ENETUNREACH, EHOSTUNREACH
+      // are all symptoms of network-level blocking, not SMTP rejections
       const blocked =
         msg.includes("ECONNREFUSED") ||
-        msg.includes("ETIMEDOUT") ||
-        msg.includes("ECONNRESET") ||
-        msg.includes("ENETUNREACH") ||
-        msg.includes("EHOSTUNREACH");
+        msg.includes("ETIMEDOUT")    ||
+        msg.includes("ECONNRESET")   ||
+        msg.includes("ENETUNREACH")  ||
+        msg.includes("EHOSTUNREACH") ||
+        msg.includes("ENOTFOUND")    ||
+        msg.includes("EACCES");
       done({ responses, blocked, error: msg });
     });
 
+    // FIX 3: Unexpected close → treat as blocked
+    // On Render/Railway the connection is often silently dropped mid-conversation
     socket.on("close", () => {
-      if (!settled) done({ responses, blocked: false, error: "Connection closed unexpectedly" });
+      if (!settled) done({ responses, blocked: true, error: "Connection closed unexpectedly" });
     });
   });
-}
-
-/**
- * getLastResponseCode(responses)
- * Extract the numeric code from the last recorded SMTP response.
- */
-function getLastCode(responses) {
-  if (!responses.length) return null;
-  const last = responses[responses.length - 1];
-  const m = last.match(/^(\d{3})/);
-  return m ? parseInt(m[1], 10) : null;
 }
 
 /**
@@ -183,25 +174,36 @@ async function probeSmtp({ mxHost, port, email }) {
   // responses[4] = RCPT TO (fake address) — catch-all probe
   // responses[5] = QUIT
 
-  // If we got fewer responses the server closed early
+  // FIX 4: Incomplete dialog → treat as blocked, not a real SMTP rejection
+  // If the server closed before we got all responses, it's a network issue
   if (responses.length < 4) {
-    return { accepted: false, catchAllProbeAccepted: false, blocked: false, error: `Incomplete SMTP dialog (${responses.length} responses)` };
+    return {
+      accepted: false,
+      catchAllProbeAccepted: false,
+      blocked: true,   // was false — wrong on cloud hosts
+      error: `Incomplete SMTP dialog (${responses.length} responses)`,
+    };
   }
 
   // Greeting must be 220
   const greetingCode = responses[0] ? parseInt(responses[0], 10) : 0;
   if (greetingCode !== 220) {
-    return { accepted: false, catchAllProbeAccepted: false, blocked: false, error: `Bad greeting: ${responses[0]}` };
+    // Bad greeting is also a network/block issue, not a mailbox rejection
+    return {
+      accepted: false,
+      catchAllProbeAccepted: false,
+      blocked: true,   // was false
+      error: `Bad greeting: ${responses[0]}`,
+    };
   }
 
   // RCPT TO for real address is responses[3]
   const rcptResponse = responses[3] || "";
   const rcptCode = parseInt(rcptResponse, 10);
 
-  // 2xx = accepted, 4xx = temporary (greylisting etc), 5xx = permanent rejection
+  // 2xx = accepted, 4xx = temporary (greylisting), 5xx = permanent rejection
   const accepted = rcptCode >= 200 && rcptCode < 300;
 
-  // If the real address was not accepted, no point checking catch-all
   if (!accepted) {
     return { accepted: false, catchAllProbeAccepted: false, blocked: false, error: rcptResponse };
   }
@@ -273,7 +275,7 @@ async function checkSmtp({ email, mxRecords }) {
     }
   }
 
-  // Every host/port was blocked
+  // Every host/port combination was blocked
   return {
     smtpValid: false,
     blocked: true,
