@@ -1,0 +1,30 @@
+{
+  "name": "email-deliverability-checker",
+  "version": "2.0.0",
+  "description": "Email format, DNS/MX, and SMTP deliverability checker with React frontend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev:server": "nodemon server.js",
+    "dev:client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build": "cd client && npm run build",
+    "build:start": "npm run build && npm start"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2",
+    "csv-parser": "^3.0.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "multer": "^1.4.5-lts.1",
+    "p-limit": "^3.1.0",
+    "smtp-connection": "^4.0.2",
+    "validator": "^13.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
